@@ -11,6 +11,9 @@ static NSString * const kTemplateVar = @"TemplateVar";
 NSString  *gCustomBaseClass;
 NSString  *gCustomBaseClassImport;
 NSString  *gCustomBaseClassForced;
+NSString  *gCustomBaseModelClass;
+NSString  *gCustomBaseModelClassImport;
+NSString  *gCustomPrefix;
 BOOL       gSwift;
 
 static NSString *const kAttributeValueScalarTypeKey = @"attributeValueScalarType";
@@ -119,6 +122,22 @@ static NSString *const kAdditionalHeaderFileNameKey = @"additionalHeaderFileName
 }
 - (NSString*)baseClassImport {
     return gCustomBaseClassImport;
+}
+
+- (BOOL)hasCustomBaseModelClassImport {
+    return gCustomBaseModelClassImport == nil ? NO : YES;
+}
+
+- (NSString*)baseModelClass {
+    return gCustomBaseModelClass;
+}
+
+- (NSString*)baseModelClassImport {
+    return gCustomBaseModelClassImport;
+}
+
+- (NSString*)prefix {
+    return gCustomPrefix;
 }
 
 - (BOOL)hasCustomClass {
@@ -687,6 +706,11 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
         {@"list-source-files",  0,     DDGetoptNoArgument},
         {@"orphaned",           0,     DDGetoptNoArgument},
         
+        // Glow private options:
+        {@"prefix",             0,     DDGetoptRequiredArgument},
+        {@"base-model-class",   0,     DDGetoptRequiredArgument},
+        {@"base-model-class-import",   0,     DDGetoptRequiredArgument},
+        
         {@"help",               'h',   DDGetoptNoArgument},
         {@"version",            0,     DDGetoptNoArgument},
         {@"template-var",       0,     DDGetoptKeyValueArgument},
@@ -745,6 +769,9 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
            "--orphaned                Only list files whose entities no longer exist\n"
            "--version                 Display version and exit\n"
            "--help                    Display this help and exit\n"
+           "--base-model-class CLASS  Custom base model class\n"
+           "--base-model-class-import TEXT  Imports base model class as #import TEXT\n"
+           "--prefix PREFIX           Custom prefix\n"
            );
 }
 
@@ -934,7 +961,7 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
     }
     
     if (_version) {
-        printf("mogenerator 1.28. By Jonathan 'Wolf' Rentzsch + friends.\n");
+        printf("mogenerator 1.28 (Glow Mod). By Jonathan 'Wolf' Rentzsch + friends. Mod by Allen.\n");
         return EXIT_SUCCESS;
     }
     
@@ -954,6 +981,10 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
         gCustomBaseClass = [baseClass retain];
         gCustomBaseClassImport = [baseClassImport retain];
     }
+    
+    gCustomPrefix = [prefix retain];
+    gCustomBaseModelClass = [baseModelClass retain];
+    gCustomBaseModelClassImport = [baseModelClassImport retain];
 
     NSString * mfilePath = includem;
     NSString * hfilePath = includeh;
@@ -1076,12 +1107,14 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
             generatedHumanM = [generatedHumanM stringByReplacingOccurrencesOfRegex:@"([ \t]*(\n|\r|\r\n)){2,}" withString:@"\n\n"];
             
             NSString *entityClassName = [entity managedObjectClassName];
+            NSString *entityName = [entity name];
+            NSString *fileNamePrefix = prefix ?: @"";
             BOOL machineDirtied = NO;
             
             // Machine header files.
             NSString *extension = (_swift ? @"swift" : @"h");
             NSString *machineHFileName = [machineDir stringByAppendingPathComponent:
-                                    [NSString stringWithFormat:@"_%@.%@", entityClassName, extension]];
+                                    [NSString stringWithFormat:@"_%@%@.%@", fileNamePrefix, entityName, extension]];
             if (_listSourceFiles) {
                 [machineHFiles addObject:machineHFileName];
             } else {
@@ -1097,7 +1130,7 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
             NSString *machineMFileName = nil;
             if (!_swift) {
                 machineMFileName = [machineDir stringByAppendingPathComponent:
-                    [NSString stringWithFormat:@"_%@.m", entityClassName]];
+                    [NSString stringWithFormat:@"_%@%@.m", fileNamePrefix, entityName]];
                 if (_listSourceFiles) {
                     [machineMFiles addObject:machineMFileName];
                 } else {
@@ -1112,7 +1145,7 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
             
             // Human header files.
             NSString *humanHFileName = [humanDir stringByAppendingPathComponent:
-                [NSString stringWithFormat:@"%@.%@", entityClassName, extension]];
+                [NSString stringWithFormat:@"%@%@.%@", fileNamePrefix, entityName, extension]];
             if (_listSourceFiles) {
                 [humanHFiles addObject:humanHFileName];
             } else {
@@ -1128,9 +1161,9 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
             if (!_swift) {
                 //  Human source files.
                 NSString *humanMFileName = [humanDir stringByAppendingPathComponent:
-                    [NSString stringWithFormat:@"%@.m", entityClassName]];
+                    [NSString stringWithFormat:@"%@%@.m", fileNamePrefix, entityName]];
                 NSString *humanMMFileName = [humanDir stringByAppendingPathComponent:
-                    [NSString stringWithFormat:@"%@.mm", entityClassName]];
+                    [NSString stringWithFormat:@"%@%@.mm", fileNamePrefix, entityName]];
                 if (![fm regularFileExistsAtPath:humanMFileName] && [fm regularFileExistsAtPath:humanMMFileName]) {
                     //  Allow .mm human files as well as .m files.
                     humanMFileName = humanMMFileName;
