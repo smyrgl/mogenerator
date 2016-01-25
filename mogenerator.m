@@ -1114,7 +1114,7 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
             // Machine header files.
             NSString *extension = (_swift ? @"swift" : @"h");
             NSString *machineHFileName = [machineDir stringByAppendingPathComponent:
-                                    [NSString stringWithFormat:@"_%@%@.%@", fileNamePrefix, entityName, extension]];
+                                    [NSString stringWithFormat:@"%@.%@", entityClassName, extension]];
             if (_listSourceFiles) {
                 [machineHFiles addObject:machineHFileName];
             } else {
@@ -1130,7 +1130,7 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
             NSString *machineMFileName = nil;
             if (!_swift) {
                 machineMFileName = [machineDir stringByAppendingPathComponent:
-                    [NSString stringWithFormat:@"_%@%@.m", fileNamePrefix, entityName]];
+                    [NSString stringWithFormat:@"%@.m", entityClassName]];
                 if (_listSourceFiles) {
                     [machineMFiles addObject:machineMFileName];
                 } else {
