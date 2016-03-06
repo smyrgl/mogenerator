@@ -28,6 +28,10 @@
 - (NSString*)additionalHeaderFileName;
 - (void)_processPredicate:(NSPredicate*)predicate_ bindings:(NSMutableArray*)bindings_;
 - (NSArray*)prettyFetchRequests;
+- (BOOL)hasCustomBaseModelClassImport;
+- (NSString*)baseModelClass;
+- (NSString*)baseModelClassImport;
+- (NSString*)prefix;
 @end
 
 @interface NSAttributeDescription (typing)
@@ -72,6 +76,9 @@
     NSString              *machineDir;
     NSString              *humanDir;
     NSString              *templateGroup;
+    NSString              *prefix;
+    NSString              *baseModelClass;
+    NSString              *baseModelClassImport;
     BOOL                  _help;
     BOOL                  _version;
     BOOL                  _listSourceFiles;
