@@ -19,6 +19,7 @@
     }
 
     NSPropertyDescription *propertyDescription = [[self alloc] init];
+    propertyDescription.optional = NO;
     BOOL syncable = NO;
 
     for (NSXMLNode *xmlAttribute in [xmlNode attributes]) {
